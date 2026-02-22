@@ -1,0 +1,90 @@
+services:
+  pgsql-ticket:
+    image: postgres:17.6
+    ports:
+      - "9876:5432"
+    environment:
+      - POSTGRES_PASSWORD=pgsql-ticket-password 
+      - POSTGRES_USER=pgsql-ticket-master     
+    networks:
+      - backend
+    volumes:
+      - ./02-create-database-sales.sql:/docker-entrypoint-initdb.d/02-create-database-sales.sql
+      - ../pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pgsql-ticket-master -d tickets-sales"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  pgadmin:
+    image: dpage/pgadmin4:9.8.0
+    platform: linux/amd64
+    ports:
+      - "8123:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=web@ufop.edu.br
+      - PGADMIN_DEFAULT_PASSWORD=123456
+    networks:
+      - backend
+    depends_on:
+      - pgsql-ticket
+
+  tickets-app:
+    build: 
+        context: ../tickets
+        dockerfile: Dockerfile
+    image: tickets-microservice 
+    ports:
+      - "4000:4000"
+    networks:
+      - backend
+    depends_on:
+      pgsql-ticket:
+        condition: service_healthy
+    environment:
+      - SERVER_PORT=4000
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://pgsql-ticket:5432/tickets-sales
+      - SPRING_DATASOURCE_USERNAME=pgsql-ticket-master
+      - SPRING_DATASOURCE_PASSWORD=pgsql-ticket-password
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+    volumes:
+      - ../tickets/src:/app/src
+
+  api-gateway:
+    build:
+      context: ../gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - backend
+      - frontend
+    depends_on:
+      - tickets-app
+
+  react-app:
+    build:
+      context: ../frontend 
+      dockerfile: Dockerfile.dev
+    container_name: react-app
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../frontend:/app         
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true 
+      - VITE_GATEWAY_URL=http://localhost:8080
+    depends_on:
+      - api-gateway
+    networks:
+      - frontend
+
+
+networks:
+  backend:
+    driver: bridge
+  frontend:
+    driver: bridge

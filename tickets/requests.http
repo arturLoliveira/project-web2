@@ -1,0 +1,61 @@
+@baseUrl = http://localhost:4000
+
+###  EVENTOS
+
+### Listar todos os eventos
+GET {{baseUrl}}/events
+
+### Criar um novo Evento
+POST {{baseUrl}}/events
+Content-Type: application/json
+
+{
+  "description": "Teatro",
+  "type": "TEATRO",
+  "date": "2026-12-20T20:00:00",
+  "startSales": "2026-01-01T08:00:00",
+  "endSales": "2026-12-19T23:59:00",
+  "price": 50.00
+}
+
+###  USUÁRIOS
+
+### Listar todos os usuários
+GET {{baseUrl}}/users
+
+### Criar um novo Usuário
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "name": "Artur Linhares",
+  "email": "artur@teste.com",
+  "password": "1234",
+  "city": "Itabira",
+  "type": "CLIENTE"
+}
+###
+PUT {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "name": "TESTE",
+  "email": "teste@example.com",
+  "password": "novaSenha",
+  "city": "BH",
+  "type": "ADMIN"
+}
+
+### VENDAS
+### Realizar uma Venda (Comprar Ingresso)
+POST {{baseUrl}}/sales
+Content-Type: application/json
+
+{
+  "userId": "COPIE_UM_UUID_DE_USUARIO_AQUI",
+  "eventId": "COPIE_UM_UUID_DE_EVENTO_AQUI",
+  "saleStatus": "PAGO"
+}
+
+### Listar todas as Vendas
+GET {{baseUrl}}/sales

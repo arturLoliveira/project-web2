@@ -1,0 +1,18 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  main:
+    web-application-type: reactive
+gateway:
+  frontend:
+    uri: http://react-app:3000
+  cloud:
+    gateway:
+      routes:
+        - id: sales-service
+          uri: http://tickets-app:4000 
+          predicates:
+            - Path=/events/**, /sales/**, /users/**
